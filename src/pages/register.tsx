@@ -33,6 +33,10 @@ type FormType = {
   password : string;
   password_confirmation : string;
 };
+interface Province {
+  name: string;
+  id: string;
+}
 export default function RegisterPage() {
   const [provinces , setProvinces] = useState<Province[]>([]);
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
@@ -44,7 +48,7 @@ export default function RegisterPage() {
       handleSubmit,
       formState: { errors }
     } = useForm<FormType>({
-      resolver: yupResolver(schema)
+      // resolver: yupResolver(schema)
     });
 
     const onSubmit = (data: any) => console.log(data);
