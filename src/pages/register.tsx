@@ -1,74 +1,131 @@
 import Link from "next/link";
 import * as Yup from 'yup'
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import bg from '../../public/property.jpg'
 import Image from "next/image";
 import logo from '../../public/logo.png'
 import { useEffect, useState } from "react";
 import axios from 'axios';
+import { useQuery } from 'react-query';
+import { fetchCity, fetchProject, fetchProvince, fetchSales, fetchUnit } from "./api/api";
+import { useParams } from "next/navigation";
 
 const schema = Yup.object().shape({
+  id_number : Yup.string().nullable(),
   name : Yup.string().required(),
-  province : Yup.string().required(),
-  city : Yup.string().required(),
-  sales : Yup.string().required(),
-  project :  Yup.string().required(),
-  unit_type : Yup.string().required(),
+  email : Yup.string().email('Email Invalid!').nullable(),
+  province_id : Yup.string().required(),
+  city_id : Yup.string().required(),
+  profession : Yup.string().nullable(),
+  sales_id : Yup.string().required(),
+  project_id :  Yup.string().required(),
+  unit_type_id : Yup.string().required(),
   whatsapp: Yup.string().required().min(12),
   password: Yup.string().required().min(7),
   password_confirmation : Yup.string().required().min(7).oneOf([Yup.ref("password"), ''], 'Password must match'),
 });
-type FormType = {
-  id_number : string;
+
+interface FormType {
+  id_number? : string | null;
   name : string;
-  email : string;
-  province : string;
-  city : string;
-  profession : string;
-  sales : string;
-  project : string;
-  unit_type : string;
+  email? : string | null;
+  province_id : string;
+  city_id : string;
+  profession? : string | null;
+  sales_id : string;
+  project_id : string;
+  unit_type_id : string;
   whatsapp : string;
   password : string;
   password_confirmation : string;
 };
-interface Province {
-  name: string;
-  id: string;
-}
-export default function RegisterPage() {
-  const [provinces , setProvinces] = useState<Province[]>([]);
-  const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
 
+// interface Province {
+//   name: string;
+//   id: string;
+// }
+export default function RegisterPage() {
+  // const [select1Value, setSelect1Value] = useState<string | null>(null);
+  // const [select2Value, setSelect2Value] = useState<string | null>(null);
+  // const [select2Disabled, setSelect2Disabled] = useState(true);
+  // const [provinces , setProvinces] = useState<Province[]>([]);
+  // const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
+
+
+  // Select
+  // const handleSelect1Change = (value: string | null) => {
+  //   setSelect1Value(value);
+  //   // Enable select2 and reset its value when select1 changes
+  //   setSelect2Disabled(false);
+  //   setSelect2Value(null);
+  // };
+
+  // const handleSelect2Change = (value: string | null) => {
+  //   setSelect2Value(value);
+  // };
 
   // const [posts, setPosts] = useState<FormType[]>([]);
     const {
+      setValue,
+      watch,
+      control,
       register,
       handleSubmit,
       formState: { errors }
     } = useForm<FormType>({
-      // resolver: yupResolver(schema)
+      resolver: yupResolver(schema)
     });
+    // const { control, setValue, watch } = useForm<FormType>();
+  const select1Value = watch('province_id');
+  const onSubmit = (data: any) => console.log(data);
 
-    const onSubmit = (data: any) => console.log(data);
 
+    // useEffect(() => {
+    //   const fetchData = async () => {
+    //     try {
+    //       const response = await axios.get('https://api-staging.friandy.web.id/api/get-province');
+    //       setProvinces(response.data.data);
+    //       console.log(response.data.data)
+    //     } catch (error) {
+    //       console.error('Error fetching data:', error);
+    //     }
+    //   };
+    //     fetchData();
+    // }, []);
+      // const handleProvinceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+      //   setSelectedProvince(event.target.value);
+      // };
 
-    useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await axios.get('https://api-staging.friandy.web.id/api/get-province');
-          setProvinces(response.data.data);
-          console.log(response.data.data)
-        } catch (error) {
-          console.error('Error fetching data:', error);
+      // Fetch data from API 1
+      const { data: dataApi1 } = useQuery('api1', fetchProvince);
+      console.log(dataApi1)
+
+      // Fetch data from API 2
+      const { data: dataApi2 } = useQuery(
+        ['api2', dataApi1?.[0].id],
+        () => fetchCity(dataApi1?.[0].id),
+        {
+          enabled: !!dataApi1?.[0].id,
         }
-      };
-        fetchData();
-    }, []);
-      const handleProvinceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedProvince(event.target.value);
-      };
+      );
+      console.log(dataApi1?.id)
+
+      // Fetch data from API 3
+      const { data: dataApi3 } = useQuery('api3', fetchSales);
+      // console.log(dataApi3)
+
+      // Fetch data from API 3
+      const { data: dataApi4 } = useQuery('api4', fetchProject);
+      // console.log(dataApi4)
+
+      // Fetch data from API 3
+      const { data: dataApi5 } = useQuery('api5', fetchUnit);
+      // console.log(dataApi5)
+
+      // if (isLoadingApi1 || isLoadingApi2 || isLoadingApi3 || isLoadingApi4) {
+      //   return <p>Loading...</p>;
+      // }
     return (
       <div>
         <div className="relative flex flex-col items-center overflow-hidden">
@@ -116,30 +173,48 @@ export default function RegisterPage() {
                   <div className="w-full my-1">
                     {/* <Province/> */}
                     <label htmlFor="province" className="block text-md font-semibold text-gray-800">Provinsi</label>
-                    <select
-                      className="w-full mt-2 border rounded-md p-[10px]"
-                      {...register('province')}
-                    >
-                      <option value="" disabled hidden selected>Pilih</option>
-                      {provinces && provinces.map(e => (
-                        <option key={e.id} value={e.id}>
-                        {e.name}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-red-500 text-[14px] my-1">{errors.province?.message}</p>
+                    <Controller 
+                      name="province_id"
+                      control={control}
+                      defaultValue=""
+                      render={({ }) => (
+                        <select
+                          className="w-full mt-2 border rounded-md p-[10px]"
+                          {...register('province_id')}
+                        >
+                          <option value="" disabled hidden selected>Pilih</option>
+                          {dataApi1 && dataApi1.map((e: any) => (
+                            <option key={e.id} value={e.id}>
+                            {e.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    />
+                    <p className="text-red-500 text-[14px] my-1">{errors.province_id?.message}</p>
                   </div>
                   <div className="w-full my-1">
                     <label htmlFor="city" className="block text-md font-semibold text-gray-800">Kota</label>
-                    <select
-                      className="w-full mt-2 border rounded-md p-[10px]"
-                      {...register('city')}
-                    >
-                      <option value="" disabled hidden selected>Pilih</option>
-                      <option value="city_1">Kota 1</option>
-                      <option value="city_2">Kota 2</option>
-                    </select>
-                    <p className="text-red-500 text-[14px] my-1">{errors.city?.message}</p>
+                    <Controller
+                      name="city_id"
+                      control={control}
+                      defaultValue=""
+                      render={({ }) => (
+                        <select
+                          className="w-full mt-2 border rounded-md p-[10px]"
+                          disabled={!select1Value}
+                          {...register('city_id')}
+                        >
+                          <option value="" disabled hidden selected>Pilih</option>
+                          {dataApi2 && dataApi2.map((e: any) => (
+                            <option key={e.id} value={e.id}>
+                            {e.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    />
+                    <p className="text-red-500 text-[14px] my-1">{errors.city_id?.message}</p>
                   </div>
                   <div className="w-full my-1">
                     <label htmlFor="profession" className="block text-md font-semibold text-gray-800">
@@ -151,8 +226,14 @@ export default function RegisterPage() {
                       {...register('profession')}
                     >
                       <option value="" disabled hidden selected>Pilih</option>
-                      <option value="profesi_1">Profesi 1</option>
-                      <option value="profesi_2">Profesi 2</option>
+                      <option value="ASN">Aparatur Sipil Negara (ASN)</option>
+                      <option value="Karyawan BUMN">Karyawan BUMN</option>
+                      <option value="Karyawan Swasta">Karyawan Swasta</option>
+                      <option value="Wirausahawan">Wirausahawan</option>
+                      <option value="TNI/Polri">TNI/Polri</option>
+                      <option value="Karyawan Honorer">Karyawan Honorer</option>
+                      <option value="Mahasiswa">Mahasiswa</option>
+                      <option value="Lainnya">Lainnya</option>
                     </select>
                   </div>
                   <div className="w-full my-1">
@@ -161,13 +242,16 @@ export default function RegisterPage() {
                     </label>
                     <select
                       className="w-full mt-2 border rounded-md p-[10px]"
-                      {...register('sales')}
+                      {...register('sales_id')}
                     >
                       <option value="" disabled hidden selected>Pilih</option>
-                      <option value="sales_1">Sales 1</option>
-                      <option value="sales_2">Sales 2</option>
+                      {dataApi3 && dataApi3.map((e: any) => (
+                        <option key={e.id} value={e.id}>
+                        {e.name}
+                        </option>
+                      ))}
                     </select>
-                    <p className="text-red-500 text-[14px] my-1">{errors.sales?.message}</p>
+                    <p className="text-red-500 text-[14px] my-1">{errors.sales_id?.message}</p>
                   </div>
                   <div className="w-full my-1">
                     <label htmlFor="project" className="block text-md font-semibold text-gray-800">
@@ -175,13 +259,16 @@ export default function RegisterPage() {
                     </label>
                     <select
                       className="w-full mt-2 border rounded-md p-[10px]"
-                      {...register('project')}
+                      {...register('project_id')}
                     >
                       <option value="" disabled hidden selected>Pilih</option>
-                      <option value="project_1">Project 1</option>
-                      <option value="project_2">Project 2</option>
+                      {dataApi4 && dataApi4.map((e: any) => (
+                        <option key={e.id} value={e.id}>
+                        {e.name}
+                        </option>
+                      ))}
                     </select>
-                    <p className="text-red-500 text-[14px] my-1">{errors.project?.message}</p>
+                    <p className="text-red-500 text-[14px] my-1">{errors.project_id?.message}</p>
                   </div>
                   <div className="w-full my-1">
                     <label htmlFor="unit" className="block text-md font-semibold text-gray-800">
@@ -189,13 +276,16 @@ export default function RegisterPage() {
                     </label>
                     <select
                       className="w-full mt-2 border rounded-md p-[10px]"
-                      {...register('unit_type')}
+                      {...register('unit_type_id')}
                     >
                       <option value="" disabled hidden selected>Pilih</option>
-                      <option value="unit_type_1">Unit 1</option>
-                      <option value="unit_type_2">Unit 2</option>
+                      {dataApi5 && dataApi5.map((e: any) => (
+                        <option key={e.id} value={e.id}>
+                        {e.name}
+                        </option>
+                      ))}
                     </select>
-                    <p className="text-red-500 text-[14px] my-1">{errors.unit_type?.message}</p>
+                    <p className="text-red-500 text-[14px] my-1">{errors.unit_type_id?.message}</p>
                   </div>
                 <h1 className="bg-slate-200 w-full text-center p-2">Data Login</h1>
                   <label htmlFor="whatsapp" className="block text-md font-semibold text-gray-800">WhatsApp</label>

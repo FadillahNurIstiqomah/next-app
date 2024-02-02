@@ -1,30 +1,45 @@
 import Link from "next/link";
 import * as Yup from 'yup'
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import Image from "next/image";
 import bg from '../../public/property.jpg'
 import logo from '../../public/logo.png'
+import { useLogin } from "./api/auth";
 
 const schema = Yup.object().shape({
   whatsapp: Yup.string().required().min(12),
   password: Yup.string().required().min(7),
 });
-type FormType = {
+
+// type LoginFormProps = {
+//   onSubmit: SubmitHandler<FormLogin>;
+// }
+type FormLogin = {
   whatsapp: string;
   password: string;
 };
 
 export default function LoginPage() {
+  // const { register, handleSubmit, formState: {errors}} = useForm({
+  //   resolver: yupResolver(schema)
+  // });
+  const loginMutation = useLogin();
+
+  const onSubmit = async (data: { whatsapp: string; password: string }) => {
+    await loginMutation.mutateAsync(data);
+  };
     const {
       register,
       handleSubmit,
       formState: { errors }
-    } = useForm<FormType>({
+    } = useForm<FormLogin>({
       resolver: yupResolver(schema)
     });
 
-    const onSubmit = (data: any) => console.log(data);
+
+    // const onSubmit = (data: any) => console.log(data);
+
     return (
       <div>
         <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden">
