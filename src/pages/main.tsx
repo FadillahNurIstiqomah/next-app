@@ -27,7 +27,7 @@ const mutation = useMutation(logout, {
           <Image
             src={bg}
             alt="background"
-            className="opacity-70 scale-[2.0]"
+            className="opacity-70 lg:scale-[2.0] scale-[3.0]"
           />
         </div>
         <div className="w-full p-6 bg-white rounded-md shadow-md lg:max-w-xl">
@@ -46,7 +46,7 @@ const mutation = useMutation(logout, {
             <Image 
               src={logo}
               alt="logo"
-              className="w-[160px] h-[80px] ml-[180px] mt-3"
+              className="w-[160px] h-[80px] lg:ml-[180px] ml-[60px] mt-3"
             />
         </div>
       </div>

@@ -37,14 +37,12 @@ export default function LoginPage() {
           router.push('/main')
         } 
       },
-      onError: (error) => {
-        if (error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: 'Email atau Password Salah!',
-          });
-        }
+      onError: (error: any) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: error.response.data.message,
+        });
       },
     });
 

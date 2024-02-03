@@ -5,13 +5,9 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import bg from '../../public/property.jpg'
 import Image from "next/image";
 import logo from '../../public/logo.png'
-import { useEffect, useState } from "react";
-import axios from 'axios';
 import { useMutation, useQuery } from 'react-query';
 import { fetchCity, fetchProject, fetchProvince, fetchSales, fetchUnit } from "./api/api";
-import { useParams } from "next/navigation";
 import { registerUser } from "./api/auth";
-import { Button, Modal } from 'antd';
 import Cookies from 'js-cookie';
 import { useRouter } from "next/router";
 import Swal from "sweetalert2";
@@ -47,8 +43,6 @@ interface FormType {
 };
 
 export default function RegisterPage() {
-      // const [modal1Open, setModal1Open] = useState(false);
-      // const [modal2Open, setModal2Open] = useState(false);
       const router = useRouter();
       const {
         setValue,
@@ -108,22 +102,11 @@ export default function RegisterPage() {
         onSuccess: (registerUser) => {
           if (registerUser) {
             const redirectUrl = Cookies.get('LinkPayment');
-  
-            // Redirect to the URL from the cookie upon successful mutation
             if (redirectUrl) {
               window.open(redirectUrl, '_blank');
             }
           }
         },
-        // onError: (error) => {
-        //   if (error) {
-        //     Swal.fire({
-        //       icon: 'error',
-        //       title: 'Oops...',
-        //       text: 'Anda Sudah Pernah Registrasi',
-        //     });
-        //   }
-        // },
         onSettled: () => {
           router.push('/login')
         },
@@ -131,12 +114,11 @@ export default function RegisterPage() {
       const handleRegister: SubmitHandler<FormType> = async (data) => {
         try {
           await registerMutation.mutateAsync(data);
-          // Mutation akan dipicu secara otomatis oleh React Hook Form
-        } catch (error) {
+        } catch (error: any) {
           Swal.fire({
             icon: 'error',
             title: 'Oops...',
-            text: 'Anda Sudah Pernah Registrasi',
+            text: error.response.data.message,
           });
         }
       };
@@ -368,17 +350,6 @@ export default function RegisterPage() {
                   >
                     Register
                   </button>
-                  {/* <Modal
-                    title="Vertically centered modal dialog"
-                    centered
-                    open={modal2Open}
-                    onOk={() => setModal2Open(false)}
-                    onCancel={() => setModal2Open(false)}
-                  >
-                    <p>some contents...</p>
-                    <p>some contents...</p>
-                    <p>some contents...</p>
-                  </Modal> */}
               </form>
             <p className="mt-4 text-sm text-center text-gray-700">
               Already have an account?{" "}
