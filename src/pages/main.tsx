@@ -15,8 +15,8 @@ const mutation = useMutation(logout, {
     onSuccess: () => {
       Swal.fire({
         icon: 'success',
-        title: 'BERHASIL!',
-        text: 'Logout Berhasil',
+        title: 'BERHASIL LOGOUT',
+        text: 'Terima kasih telah menggunakan website ini.',
       });
     }
   });

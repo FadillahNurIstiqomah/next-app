@@ -36,8 +36,8 @@ export default function LoginPage() {
         if (login) {
           Swal.fire({
             icon: 'success',
-            title: 'SELAMAT!',
-            text: 'Login Berhasil',
+            title: 'BERHASIL LOGIN',
+            text: 'Selamat Datang, Silahkan menggunakan website ini dengan baik.',
           });
           router.push('/main')
         } 
