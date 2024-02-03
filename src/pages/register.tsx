@@ -57,6 +57,7 @@ export default function RegisterPage() {
 
       const selectValueProvince = watch('province_id');
       const selectValueProject = watch('project_id');
+
       // Fetch data from API 1
       const { data: dataApi1 } = useQuery('api1', fetchProvince);
       const provinceId = watch('province_id')
@@ -76,14 +77,12 @@ export default function RegisterPage() {
 
       // Fetch data from API 3
       const { data: dataApi3 } = useQuery('api3', fetchSales);
-      // console.log(dataApi3)
 
-      // Fetch data from API 3
+      // Fetch data from API 4
       const { data: dataApi4 } = useQuery('api4', fetchProject);
       const projectId = watch('project_id')
-      // console.log(dataApi4)
 
-      // Fetch data from API 3
+      // Fetch data from API 5
       const { data: dataApi5 } = useQuery(
         ['api5', projectId],
         () => fetchUnit( projectId),
@@ -91,7 +90,6 @@ export default function RegisterPage() {
           enabled: !! projectId,
         }
       );
-      // console.log(dataApi5)
 
       const handleSelectChange1 = (e : React.ChangeEvent<HTMLSelectElement>) => {
         const newValue1 = e.target.value;

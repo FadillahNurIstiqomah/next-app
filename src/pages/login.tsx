@@ -34,6 +34,11 @@ export default function LoginPage() {
     const mutation = useMutation(login, {
       onSuccess: (login) => {
         if (login) {
+          Swal.fire({
+            icon: 'success',
+            title: 'SELAMAT!',
+            text: 'Login Berhasil',
+          });
           router.push('/main')
         } 
       },
@@ -64,14 +69,20 @@ export default function LoginPage() {
             <h1 className="text-2xl font-bold text-center text-gray-700 my-3">LOGIN</h1>
             <p className="text-black text-md my-3">Login to choose your right property.</p>
             <form onSubmit={handleSubmit(onSubmit)} className="mt-4 w-full">
-              <label htmlFor="whatsapp" className="block text-md font-semibold text-gray-800">WhatsApp</label>
+              <label htmlFor="whatsapp" className="block text-md font-semibold text-gray-800">
+                WhatsApp
+                <span className="text-red-500 ml-1">*</span>
+              </label>
               <input
                 className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border rounded-md focus:border-gray-400 focus:ring-gray-300 focus:outline-none focus:ring focus:ring-opacity-40"
                 type="text"
                 {...register("whatsapp")}
               />
               <p className="text-red-500 text-[14px] my-1">{errors.whatsapp?.message}</p>
-              <label htmlFor="password" className="block text-md font-semibold text-gray-800">Password</label>
+              <label htmlFor="password" className="block text-md font-semibold text-gray-800">
+                Password
+                <span className="text-red-500 ml-1">*</span>
+              </label>
               <input
                 className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border rounded-md focus:border-gray-400 focus:ring-gray-300 focus:outline-none focus:ring focus:ring-opacity-40"
                 type="password"

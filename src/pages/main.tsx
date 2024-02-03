@@ -5,6 +5,7 @@ import logo from '../../public/logo.png'
 import { useMutation } from "react-query";
 import { logout } from "./api/auth";
 import Cookies from 'js-cookie';
+import Swal from "sweetalert2";
 
 
 export default function Main() {
@@ -12,8 +13,12 @@ export default function Main() {
 
 const mutation = useMutation(logout, {
     onSuccess: () => {
-      window.location.href = '/login';
-    },
+      Swal.fire({
+        icon: 'success',
+        title: 'BERHASIL!',
+        text: 'Logout Berhasil',
+      });
+    }
   });
 
   const handleLogout = () => {

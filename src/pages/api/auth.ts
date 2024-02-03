@@ -1,5 +1,6 @@
 import axios from "axios";
 import { setAuthToken, removeAuthToken, setLinkPayment, setName } from './authUtils';
+import Cookies from 'js-cookie';
 
 
 export const registerUser = async(data: any) => {
@@ -18,10 +19,17 @@ export const login = async (credentials: { whatsapp: string; password: string })
 };
 
 export const logout = async () => {
-  removeAuthToken()
-  // Lakukan panggilan API logout di sini
-  // Contoh:
-  // const response = await axios.post('https://api-staging.friandy.web.id/api/customer/logout');
-  // console.log(response)
-  // return response.data
-};
+  try{
+    const token = Cookies.get('authToken');
+    await fetch('https://api-staging.friandy.web.id/api/customer/logout', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    removeAuthToken()
+    
+  } catch (error) {
+    console.error('Error during logout:', error);
+  }
+}
