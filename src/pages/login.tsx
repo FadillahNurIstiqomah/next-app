@@ -1,34 +1,28 @@
 import Link from "next/link";
 import * as Yup from 'yup'
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import Image from "next/image";
 import bg from '../../public/property.jpg'
 import logo from '../../public/logo.png'
-import { useLogin } from "./api/auth";
+import { login } from "./api/auth";
+import { useRouter } from "next/router";
+import { useMutation } from "react-query";
+import Swal from 'sweetalert2';
 
 const schema = Yup.object().shape({
   whatsapp: Yup.string().required().min(12),
   password: Yup.string().required().min(7),
 });
 
-// type LoginFormProps = {
-//   onSubmit: SubmitHandler<FormLogin>;
-// }
 type FormLogin = {
   whatsapp: string;
   password: string;
 };
 
 export default function LoginPage() {
-  // const { register, handleSubmit, formState: {errors}} = useForm({
-  //   resolver: yupResolver(schema)
-  // });
-  const loginMutation = useLogin();
+    const router = useRouter();
 
-  const onSubmit = async (data: { whatsapp: string; password: string }) => {
-    await loginMutation.mutateAsync(data);
-  };
     const {
       register,
       handleSubmit,
@@ -37,8 +31,26 @@ export default function LoginPage() {
       resolver: yupResolver(schema)
     });
 
+    const mutation = useMutation(login, {
+      onSuccess: (login) => {
+        if (login) {
+          router.push('/main')
+        } 
+      },
+      onError: (error) => {
+        if (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Email atau Password Salah!',
+          });
+        }
+      },
+    });
 
-    // const onSubmit = (data: any) => console.log(data);
+    const onSubmit = (data: { whatsapp: string; password: string }) => {
+      mutation.mutate(data);
+    };
 
     return (
       <div>
@@ -70,6 +82,7 @@ export default function LoginPage() {
               <p className="text-red-500 text-[14px] my-1">{errors.password?.message}</p>
               <button 
                 type="submit" 
+                disabled={mutation.isLoading}
                 className="w-full px-4 py-2 my-4 tracking-wide text-white transition-colors duration-200 transform bg-gray-700 rounded-md hover:bg-gray-600 focus:outline-none focus:bg-gray-600"
               >
                 Login

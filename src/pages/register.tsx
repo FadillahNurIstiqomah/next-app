@@ -1,15 +1,20 @@
 import Link from "next/link";
 import * as Yup from 'yup'
-import { Controller, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import bg from '../../public/property.jpg'
 import Image from "next/image";
 import logo from '../../public/logo.png'
 import { useEffect, useState } from "react";
 import axios from 'axios';
-import { useQuery } from 'react-query';
+import { useMutation, useQuery } from 'react-query';
 import { fetchCity, fetchProject, fetchProvince, fetchSales, fetchUnit } from "./api/api";
 import { useParams } from "next/navigation";
+import { registerUser } from "./api/auth";
+import { Button, Modal } from 'antd';
+import Cookies from 'js-cookie';
+import { useRouter } from "next/router";
+import Swal from "sweetalert2";
 
 const schema = Yup.object().shape({
   id_number : Yup.string().nullable(),
@@ -41,75 +46,39 @@ interface FormType {
   password_confirmation : string;
 };
 
-// interface Province {
-//   name: string;
-//   id: string;
-// }
 export default function RegisterPage() {
-  // const [select1Value, setSelect1Value] = useState<string | null>(null);
-  // const [select2Value, setSelect2Value] = useState<string | null>(null);
-  // const [select2Disabled, setSelect2Disabled] = useState(true);
-  // const [provinces , setProvinces] = useState<Province[]>([]);
-  // const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
+      // const [modal1Open, setModal1Open] = useState(false);
+      // const [modal2Open, setModal2Open] = useState(false);
+      const router = useRouter();
+      const {
+        setValue,
+        watch,
+        control,
+        register,
+        handleSubmit,
+        formState: { errors }
+      } = useForm<FormType>({
+        resolver: yupResolver(schema)
+      });
 
-
-  // Select
-  // const handleSelect1Change = (value: string | null) => {
-  //   setSelect1Value(value);
-  //   // Enable select2 and reset its value when select1 changes
-  //   setSelect2Disabled(false);
-  //   setSelect2Value(null);
-  // };
-
-  // const handleSelect2Change = (value: string | null) => {
-  //   setSelect2Value(value);
-  // };
-
-  // const [posts, setPosts] = useState<FormType[]>([]);
-    const {
-      setValue,
-      watch,
-      control,
-      register,
-      handleSubmit,
-      formState: { errors }
-    } = useForm<FormType>({
-      resolver: yupResolver(schema)
-    });
-    // const { control, setValue, watch } = useForm<FormType>();
-  const select1Value = watch('province_id');
-  const onSubmit = (data: any) => console.log(data);
-
-
-    // useEffect(() => {
-    //   const fetchData = async () => {
-    //     try {
-    //       const response = await axios.get('https://api-staging.friandy.web.id/api/get-province');
-    //       setProvinces(response.data.data);
-    //       console.log(response.data.data)
-    //     } catch (error) {
-    //       console.error('Error fetching data:', error);
-    //     }
-    //   };
-    //     fetchData();
-    // }, []);
-      // const handleProvinceChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-      //   setSelectedProvince(event.target.value);
-      // };
-
+      const selectValueProvince = watch('province_id');
+      const selectValueProject = watch('project_id');
       // Fetch data from API 1
       const { data: dataApi1 } = useQuery('api1', fetchProvince);
-      console.log(dataApi1)
+      const provinceId = watch('province_id')
 
       // Fetch data from API 2
       const { data: dataApi2 } = useQuery(
-        ['api2', dataApi1?.[0].id],
-        () => fetchCity(dataApi1?.[0].id),
+        ['api2',provinceId],
+        () => fetchCity(provinceId),
         {
-          enabled: !!dataApi1?.[0].id,
+          enabled: !!provinceId,
         }
       );
-      console.log(dataApi1?.id)
+      const handleSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {
+        const newValue = e.target.value;
+        setValue('province_id', newValue)
+      }
 
       // Fetch data from API 3
       const { data: dataApi3 } = useQuery('api3', fetchSales);
@@ -117,15 +86,60 @@ export default function RegisterPage() {
 
       // Fetch data from API 3
       const { data: dataApi4 } = useQuery('api4', fetchProject);
+      const projectId = watch('project_id')
       // console.log(dataApi4)
 
       // Fetch data from API 3
-      const { data: dataApi5 } = useQuery('api5', fetchUnit);
+      const { data: dataApi5 } = useQuery(
+        ['api5', projectId],
+        () => fetchUnit( projectId),
+        {
+          enabled: !! projectId,
+        }
+      );
       // console.log(dataApi5)
 
-      // if (isLoadingApi1 || isLoadingApi2 || isLoadingApi3 || isLoadingApi4) {
-      //   return <p>Loading...</p>;
-      // }
+      const handleSelectChange1 = (e : React.ChangeEvent<HTMLSelectElement>) => {
+        const newValue1 = e.target.value;
+        setValue('project_id', newValue1)
+      }
+
+      const registerMutation = useMutation(registerUser, {
+        onSuccess: (registerUser) => {
+          if (registerUser) {
+            const redirectUrl = Cookies.get('LinkPayment');
+  
+            // Redirect to the URL from the cookie upon successful mutation
+            if (redirectUrl) {
+              window.open(redirectUrl, '_blank');
+            }
+          }
+        },
+        // onError: (error) => {
+        //   if (error) {
+        //     Swal.fire({
+        //       icon: 'error',
+        //       title: 'Oops...',
+        //       text: 'Anda Sudah Pernah Registrasi',
+        //     });
+        //   }
+        // },
+        onSettled: () => {
+          router.push('/login')
+        },
+      });
+      const handleRegister: SubmitHandler<FormType> = async (data) => {
+        try {
+          await registerMutation.mutateAsync(data);
+          // Mutation akan dipicu secara otomatis oleh React Hook Form
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Anda Sudah Pernah Registrasi',
+          });
+        }
+      };
     return (
       <div>
         <div className="relative flex flex-col items-center overflow-hidden">
@@ -139,7 +153,7 @@ export default function RegisterPage() {
           <div className="w-full m-10 p-6 bg-white rounded-md shadow-md lg:max-w-xl">
             <h1 className="text-2xl font-bold text-center text-gray-700">REGISTER</h1>
             <p className="text-black text-md my-3">Register to choose your right property</p>
-              <form onSubmit={handleSubmit(onSubmit)} className="mt-4 w-full">
+              <form onSubmit={handleSubmit(handleRegister)} className="mt-4 w-full">
                 <h1 className="bg-slate-200 w-full text-center p-2">Data Diri</h1>
                   <label htmlFor="id_number" className="block text-md font-semibold text-gray-800">
                     No. KTP
@@ -153,6 +167,7 @@ export default function RegisterPage() {
                   <p className="text-red-500 text-[14px] my-1">{errors.id_number?.message}</p>
                   <label htmlFor="name" className="block text-md font-semibold text-gray-800">
                     Nama (Sesuai KTP)
+                    <span className="text-red-500 ml-1">*</span>
                   </label>
                   <input
                     className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border rounded-md focus:border-gray-400 focus:ring-gray-300 focus:outline-none focus:ring focus:ring-opacity-40"
@@ -172,17 +187,22 @@ export default function RegisterPage() {
                   <p className="text-red-500 text-[14px] my-1">{errors.email?.message}</p>
                   <div className="w-full my-1">
                     {/* <Province/> */}
-                    <label htmlFor="province" className="block text-md font-semibold text-gray-800">Provinsi</label>
+                    <label htmlFor="province" className="block text-md font-semibold text-gray-800">
+                      Provinsi
+                      <span className="text-red-500 ml-1">*</span>  
+                    </label>
                     <Controller 
                       name="province_id"
                       control={control}
                       defaultValue=""
                       render={({ }) => (
                         <select
+                          defaultValue="Pilih"
                           className="w-full mt-2 border rounded-md p-[10px]"
                           {...register('province_id')}
+                          onChange={handleSelectChange}
                         >
-                          <option value="" disabled hidden selected>Pilih</option>
+                          <option value="" disabled hidden>Pilih</option>
                           {dataApi1 && dataApi1.map((e: any) => (
                             <option key={e.id} value={e.id}>
                             {e.name}
@@ -194,18 +214,22 @@ export default function RegisterPage() {
                     <p className="text-red-500 text-[14px] my-1">{errors.province_id?.message}</p>
                   </div>
                   <div className="w-full my-1">
-                    <label htmlFor="city" className="block text-md font-semibold text-gray-800">Kota</label>
+                    <label htmlFor="city" className="block text-md font-semibold text-gray-800">
+                      Kota
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
                     <Controller
                       name="city_id"
                       control={control}
                       defaultValue=""
                       render={({ }) => (
                         <select
+                          defaultValue="Pilih"
                           className="w-full mt-2 border rounded-md p-[10px]"
-                          disabled={!select1Value}
+                          disabled={!selectValueProvince}
                           {...register('city_id')}
                         >
-                          <option value="" disabled hidden selected>Pilih</option>
+                          <option value="" disabled hidden>Pilih</option>
                           {dataApi2 && dataApi2.map((e: any) => (
                             <option key={e.id} value={e.id}>
                             {e.name}
@@ -225,7 +249,7 @@ export default function RegisterPage() {
                       className="w-full mt-2 border rounded-md p-[10px]"    
                       {...register('profession')}
                     >
-                      <option value="" disabled hidden selected>Pilih</option>
+                      <option value="Pilih" disabled hidden selected>Pilih</option>
                       <option value="ASN">Aparatur Sipil Negara (ASN)</option>
                       <option value="Karyawan BUMN">Karyawan BUMN</option>
                       <option value="Karyawan Swasta">Karyawan Swasta</option>
@@ -256,53 +280,82 @@ export default function RegisterPage() {
                   <div className="w-full my-1">
                     <label htmlFor="project" className="block text-md font-semibold text-gray-800">
                       Nama Project
+                      <span className="text-red-500 ml-1">*</span>
                     </label>
-                    <select
-                      className="w-full mt-2 border rounded-md p-[10px]"
-                      {...register('project_id')}
-                    >
-                      <option value="" disabled hidden selected>Pilih</option>
-                      {dataApi4 && dataApi4.map((e: any) => (
-                        <option key={e.id} value={e.id}>
-                        {e.name}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      name="project_id"
+                      control={control}
+                      defaultValue=""
+                      render={({ }) => (
+                        <select
+                          defaultValue="Pilih"
+                          className="w-full mt-2 border rounded-md p-[10px]"
+                          {...register('project_id')}
+                          onChange={handleSelectChange1}
+                        >
+                          <option value="" disabled hidden>Pilih</option>
+                          {dataApi4 && dataApi4.map((e: any) => (
+                            <option key={e.id} value={e.id}>
+                            {e.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    />
                     <p className="text-red-500 text-[14px] my-1">{errors.project_id?.message}</p>
                   </div>
                   <div className="w-full my-1">
                     <label htmlFor="unit" className="block text-md font-semibold text-gray-800">
                       Tipe Unit
+                      <span className="text-red-500 ml-1">*</span>
                     </label>
-                    <select
-                      className="w-full mt-2 border rounded-md p-[10px]"
-                      {...register('unit_type_id')}
-                    >
-                      <option value="" disabled hidden selected>Pilih</option>
-                      {dataApi5 && dataApi5.map((e: any) => (
-                        <option key={e.id} value={e.id}>
-                        {e.name}
-                        </option>
-                      ))}
-                    </select>
+                    <Controller
+                      name="unit_type_id"
+                      control={control}
+                      defaultValue=""
+                      render={({ }) => (
+                        <select
+                          defaultValue="Pilih"
+                          className="w-full mt-2 border rounded-md p-[10px]"
+                          disabled={!selectValueProject}
+                          {...register('unit_type_id')}
+                        >
+                          <option value="" disabled hidden>Pilih</option>
+                          {dataApi5 && dataApi5.map((e: any) => (
+                            <option key={e.id} value={e.id}>
+                            {e.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    />
                     <p className="text-red-500 text-[14px] my-1">{errors.unit_type_id?.message}</p>
                   </div>
                 <h1 className="bg-slate-200 w-full text-center p-2">Data Login</h1>
-                  <label htmlFor="whatsapp" className="block text-md font-semibold text-gray-800">WhatsApp</label>
+                  <label htmlFor="whatsapp" className="block text-md font-semibold text-gray-800">
+                    WhatsApp
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
                   <input
                     className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border rounded-md focus:border-gray-400 focus:ring-gray-300 focus:outline-none focus:ring focus:ring-opacity-40"
                     type="text"
                     {...register("whatsapp")}
                   />
                   <p className="text-red-500 text-[14px] my-1">{errors.whatsapp?.message}</p>
-                  <label htmlFor="password" className="block text-md font-semibold text-gray-800">Password</label>
+                  <label htmlFor="password" className="block text-md font-semibold text-gray-800">
+                    Password
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
                   <input
                     className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border rounded-md focus:border-gray-400 focus:ring-gray-300 focus:outline-none focus:ring focus:ring-opacity-40"
                     type="password"
                     {...register("password")}
                   />
                   <p className="text-red-500 text-[14px] my-1">{errors.password?.message}</p>
-                  <label htmlFor="password_confirmation" className="block text-md font-semibold text-gray-800">Password Confirmation</label>
+                  <label htmlFor="password_confirmation" className="block text-md font-semibold text-gray-800">
+                    Password Confirmation
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
                   <input
                     className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border rounded-md focus:border-gray-400 focus:ring-gray-300 focus:outline-none focus:ring focus:ring-opacity-40"
                     type="password"
@@ -315,6 +368,17 @@ export default function RegisterPage() {
                   >
                     Register
                   </button>
+                  {/* <Modal
+                    title="Vertically centered modal dialog"
+                    centered
+                    open={modal2Open}
+                    onOk={() => setModal2Open(false)}
+                    onCancel={() => setModal2Open(false)}
+                  >
+                    <p>some contents...</p>
+                    <p>some contents...</p>
+                    <p>some contents...</p>
+                  </Modal> */}
               </form>
             <p className="mt-4 text-sm text-center text-gray-700">
               Already have an account?{" "}
